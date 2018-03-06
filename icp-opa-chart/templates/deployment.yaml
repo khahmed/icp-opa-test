@@ -1,0 +1,44 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: {{ template "fullname" . }}
+  labels:
+    app: {{ template "name" . }}
+    chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  template:
+    metadata:
+      labels:
+        app: {{ template "name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      containers:
+      - name:  icp-opa-server
+        image: "{{ .Values.image.opa.repository }}:{{ .Values.image.opa.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        args:
+        - "run"
+        - "--server"
+        ports:
+        - name: http
+          containerPort: 8181
+      - name: icp-opa-loader
+        image: "{{ .Values.image.loader.repository }}:{{ .Values.image.loader.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        env:
+            - name: WEBHOOK 
+              value: "{{ .Values.global.slackwebhook}}"
+            - name: CLUSTERNAME
+              value: "{{ .Values.global.clustername}}"
+            - name: MAXNODEIMAGESIZE
+              value: "{{ .Values.global.maxnodeimagesize}}"
+      resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+    {{- end }}
+

@@ -1,0 +1,29 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: icp-opa
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: opa
+    spec:
+      containers:
+      - name: opa
+        image: openpolicyagent/opa
+        args:
+        - "run"
+        - "--server"
+        ports:
+        - name: http
+          containerPort: 8181
+      - name: icp-opa-loader
+        image: kahmed0822/icptest:latest
+        env:
+            - name: WEBHOOK
+              value: "https://hooks.slack.com/services/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"
+            - name: CLUSTERNAME
+              value: "ibmcloud-tor-1"
+            - name: MAXNODEIMAGESIZE
+              value: "3E+10"
